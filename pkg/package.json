@@ -1,0 +1,15 @@
+{
+  "name": "reversi-wasm",
+  "collaborators": [
+    "Tlapesium <tahuna.sakana@gmail.com>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "reversi_wasm_bg.wasm",
+    "reversi_wasm.js",
+    "reversi_wasm.d.ts"
+  ],
+  "module": "reversi_wasm.js",
+  "types": "reversi_wasm.d.ts",
+  "sideEffects": false
+}
