@@ -1,5 +1,5 @@
 [package]
-name = "reversi-wasm"
+name = "reversi"
 version = "0.1.0"
 authors = ["Tlapesium <tahuna.sakana@gmail.com>"]
 edition = "2018"
