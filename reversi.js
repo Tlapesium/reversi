@@ -1,4 +1,4 @@
-import init, {alphabeta_js, mcts_js} from './pkg/reversi_wasm.js';
+import init, {alphabeta_js, mcts_js} from './pkg/reversi.js';
 
 let canvas = document.getElementById("canvas");
 let context = canvas.getContext('2d');
