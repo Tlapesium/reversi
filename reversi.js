@@ -184,8 +184,15 @@ function AI() {
     if (player == 1 && sente == "alphabeta" && waiting == 0) {
         async function run() {
             waiting = 1;
+            let move = board_random_move();
+            let depth = 7;
+            let start = performance.now();
             await init();
-            let move = alphabeta_js(player, board, 7);
+            while (performance.now() - start < 1500 / 2) {
+                move = alphabeta_js(player, board, depth);
+                depth += 1;
+            }
+            console.log(performance.now() - start, depth - 1);
             board_put(move[0],move[1]);
             waiting = 0;
         };
@@ -194,8 +201,15 @@ function AI() {
     if (player == 2 && gote == "alphabeta" && waiting == 0) {
         async function run() {
             waiting = 1;
+            let move = board_random_move();
+            let depth = 7;
+            let start = performance.now();
             await init();
-            let move = alphabeta_js(player, board, 7);
+            while (performance.now() - start < 1500 / 2) {
+                move = alphabeta_js(player, board, depth);
+                depth += 1;
+            }
+            console.log(performance.now() - start, depth - 1);
             board_put(move[0],move[1]);
             waiting = 0;
         };
