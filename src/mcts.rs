@@ -80,6 +80,7 @@ impl MCTNode {
         return max_idx as i32
     }
 }
+
 fn MCTS_(node: &mut MCTNode, N: i32) -> i32{
     let tmp = node.select(N);
     let winner = match tmp {
@@ -92,39 +93,6 @@ fn MCTS_(node: &mut MCTNode, N: i32) -> i32{
     if node.player == 3 - winner { node.win += 1; }
     node.n += 1;
     return winner
-}
-
-pub fn MCTS_time(player : i32, board: Board, time: i32) -> (i32,i32) {
-    let mut root = MCTNode::new();
-    root.player = player;
-    root.board = board;
-    root.make_child();
-
-
-    let start = Instant::now();
-    let mut itr = 1;
-    loop {
-        if start.elapsed().as_millis() > time as u128{
-            break;
-        }
-        
-        MCTS_(&mut root, itr);
-        itr += 1;
-    }
-
-    let mut dbg : Vec<(f64,(i32,i32))> = Vec::new();
-    let mut next = (0,0);
-    let mut mx = -1.0;
-    for i in 0..root.childs.len() {
-        dbg.push((root.childs[i].win as f64 / root.childs[i].n as f64, root.childs[i].mov));
-        if mx < root.childs[i].win as f64 / root.childs[i].n as f64 {
-            mx = root.childs[i].win as f64 / root.childs[i].n as f64;
-            next = root.childs[i].mov;
-        }
-    }
-    println!("{}", itr);
-    println!("{:?}", dbg);
-    return next
 }
 
 pub fn MCTS(player : i32, board: Board, maxitr: i32) -> (i32,i32) {

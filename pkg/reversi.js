@@ -114,6 +114,26 @@ export function mcts_js(player, board, itr) {
     }
 }
 
+/**
+* @param {any} player
+* @param {any} board
+* @param {any} depth
+* @returns {Int32Array}
+*/
+export function negascout_js(player, board, depth) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        wasm.negascout_js(retptr, addHeapObject(player), addHeapObject(board), addHeapObject(depth));
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        var v0 = getArrayI32FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 4);
+        return v0;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+
 function getArrayU8FromWasm0(ptr, len) {
     return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
 }

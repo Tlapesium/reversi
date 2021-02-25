@@ -1,4 +1,4 @@
-import init, {alphabeta_js, mcts_js} from './pkg/reversi.js';
+import init, {alphabeta_js, mcts_js, negascout_js} from './pkg/reversi.js';
 
 let canvas = document.getElementById("canvas");
 let context = canvas.getContext('2d');
@@ -207,6 +207,41 @@ function AI() {
             await init();
             while (performance.now() - start < 1500 / 2) {
                 move = alphabeta_js(player, board, depth);
+                depth += 1;
+            }
+            console.log(performance.now() - start, depth - 1);
+            board_put(move[0],move[1]);
+            waiting = 0;
+        };
+        run();
+    }
+
+    if (player == 1 && sente == "negascout" && waiting == 0) {
+        async function run() {
+            waiting = 1;
+            let move = board_random_move();
+            let depth = 8;
+            let start = performance.now();
+            await init();
+            while (performance.now() - start < 1500 / 2) {
+                move = negascout_js(player, board, depth);
+                depth += 1;
+            }
+            console.log(performance.now() - start, depth - 1);
+            board_put(move[0],move[1]);
+            waiting = 0;
+        };
+        run();
+    }
+    if (player == 2 && gote == "negascout" && waiting == 0) {
+        async function run() {
+            waiting = 1;
+            let move = board_random_move();
+            let depth = 8;
+            let start = performance.now();
+            await init();
+            while (performance.now() - start < 1500 / 2) {
+                move = negascout_js(player, board, depth);
                 depth += 1;
             }
             console.log(performance.now() - start, depth - 1);
