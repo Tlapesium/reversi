@@ -1,18 +1,25 @@
-extern crate rand;
 use rand::Rng;
 use std::time::Instant;
-use crate::board::*;
 
-impl Board {
+use crate::bitboard::*;
+
+impl BitBoard {
     fn playout(&self, p: i32) -> i32 {
         let mut tmp_board = self.clone();
         let mut player = p;
         loop {
             if tmp_board.is_end(player) != 0 {break}
-            let moves = tmp_board.get_all_move(player);
-            if moves.len() > 0 {
-                let tmp = rand::thread_rng().gen_range(0, moves.len());
-                tmp_board.put(player, moves[tmp].0, moves[tmp].1 );
+            let mut nexts: Vec<BitBoard> = Vec::new();
+            let legal_board = tmp_board.make_legal_board(player);
+            if legal_board != 0 {
+                for i in 0..64 {
+                    if (legal_board >> i) & 1 != 0 {
+                        let mut next = tmp_board.clone();
+                        next.reverse(player, 1u64 << i);
+                        nexts.push(next)
+                    }
+                }
+                tmp_board = nexts[rand::thread_rng().gen_range(0,nexts.len())];
             }
             player = match player {
                 1 => 2,
@@ -28,23 +35,26 @@ struct MCTNode {
     win : i32, // 勝った回数
     n : i32, // 試行回数
     player : i32, // 手番のプレイヤー
-    board : Board, // 盤面
+    board : BitBoard, // 盤面
     mov : (i32,i32), // その盤面に至る手
     childs : Vec<MCTNode> // 子
 }
 
 impl MCTNode {
     fn new() -> Self {
-        MCTNode {win: 0, n: 0, player: 1, board: Board::new(), mov: (-1,-1), childs: Vec::new()}
+        MCTNode {win: 0, n: 0, player: 1, board: BitBoard::new(), mov: (-1,-1), childs: Vec::new()}
     }
     fn make_child(&mut self) {
         if self.board.is_end(self.player) != 0 { return }
-        let moves = self.board.get_all_move(self.player);
-        if moves.len() > 0 {
-            for mv in moves {
-                let mut nextb = self.board.clone();
-                nextb.put(self.player, mv.0, mv.1);
-                self.childs.push(MCTNode {win: 0, n: 0,  player: 3-self.player, board: nextb, mov: mv, childs: Vec::new()})
+
+        let legal_board = self.board.make_legal_board(self.player);
+        if legal_board != 0 {
+            for i in 0..64 {
+                if (legal_board >> i) & 1 != 0 {
+                    let mut next = self.board.clone();
+                    next.reverse(self.player, 1u64 << i);
+                    self.childs.push(MCTNode {win: 0, n: 0,  player: 3-self.player, board: next, mov: (i/8, i%8), childs: Vec::new()})
+                }
             }
         }
         else {
@@ -61,7 +71,7 @@ impl MCTNode {
             if self.childs[i].n == 0 { rnd.push(i as i32) }
         }
         if rnd.len() > 0 {
-            return rnd[rand::thread_rng().gen_range(0, rnd.len())];
+            return rnd[rand::thread_rng().gen_range(0,rnd.len())];
         }
         
         let e = (1.0 as f64).exp();
@@ -80,7 +90,6 @@ impl MCTNode {
         return max_idx as i32
     }
 }
-
 fn MCTS_(node: &mut MCTNode, N: i32) -> i32{
     let tmp = node.select(N);
     let winner = match tmp {
@@ -95,7 +104,7 @@ fn MCTS_(node: &mut MCTNode, N: i32) -> i32{
     return winner
 }
 
-pub fn MCTS(player : i32, board: Board, maxitr: i32) -> (i32,i32) {
+pub fn MCTS(player : i32, board: BitBoard, maxitr: i32) -> (i32,i32) {
     let mut root = MCTNode::new();
     root.player = player;
     root.board = board;

@@ -6,9 +6,6 @@ use std::panic;
 mod mcts;
 use mcts::*;
 
-mod board;
-use board::*;
-
 mod minmax;
 use minmax::*;
 
@@ -34,7 +31,7 @@ pub fn alphabeta_js(player: JsValue, board: JsValue, depth: JsValue) -> Vec<i32>
     let Player = player.as_f64().unwrap() as i32;
     let Depth = depth.as_f64().unwrap() as i32;
 
-    let mut b = Board::new();
+    let mut b = BitBoard::new();
     let arr = Array::from(&board);
 
     for i in 0..arr.length() {
@@ -61,7 +58,7 @@ pub fn mcts_js(player: JsValue, board: JsValue, itr: JsValue) -> Vec<i32> {
     let Player = player.as_f64().unwrap() as i32;
     let Itr = itr.as_f64().unwrap() as i32;
 
-    let mut b = Board::new();
+    let mut b = BitBoard::new();
     let arr = Array::from(&board);
 
     for i in 0..arr.length() {

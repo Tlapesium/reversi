@@ -255,7 +255,7 @@ function AI() {
         async function run() {
             waiting = 1;
             await init();
-            let move = mcts_js(player, board, 3000);
+            let move = mcts_js(player, board, 10000);
             board_put(move[0],move[1]);
             waiting = 0;
         };
@@ -265,7 +265,7 @@ function AI() {
         async function run() {
             waiting = 1;
             await init();
-            let move = mcts_js(player, board, 3000);
+            let move = mcts_js(player, board, 10000);
             board_put(move[0],move[1]);
             waiting = 0;
         };

@@ -1,10 +1,6 @@
-use crate::board::*;
-use std::time::Instant;
+use crate::bitboard::*;
 use std::collections::HashMap;
 
-const EVAL_CORNER1: i32 = 300;
-const EVAL_CORNER2: i32 = 50;
-const EVAL_CORNER3: i32 = 10;
 const INF: i32 = 100000000;
 
 fn min<T: std::cmp::PartialOrd>(l: T, r: T) -> T {
@@ -16,100 +12,57 @@ fn max<T: std::cmp::PartialOrd>(l: T, r: T) -> T {
     else { r }
 }
 
-impl Board {
-    fn evaluate(&self, player: i32) -> i32 {
-        // 前半は置ける場所が多いほど良い
-        // 後半は自分の石の個数を考慮する
 
-        let moves = self.get_all_move(player);
-        let mut mystones = 0;
-        let turn = (self._b1 | self._b2).count_ones() as i32;
+fn alphabeta_(board: BitBoard, player: i32, player_now: i32, depth: i32, alpha: i32, beta: i32) -> i32 {
+    if board.is_end(player_now) != 0 || depth == 0 {return board.evaluate(player, player_now)}
+    let mut a = alpha;
+    let mut score;
+    let mut score_max = -INF;
 
-        for y in 0..8 {
-            for x in 0..8 {
-                if self.get(y,x) == player {
-                    mystones += 1;
+    let legal_board = board.make_legal_board(player_now);
+    if legal_board == 0 {
+        score = -alphabeta_(board, player, 3-player_now, depth-1, -beta,-a);
+        score_max = max(score, score_max);
+    }
+    else {
+        for i in 0..64 {
+            if (legal_board >> i) & 1 != 0 {
+                let mut next = board.clone();
+                next.reverse(player_now, 1u64 << i);
+                score = -alphabeta_(next, player, 3-player_now, depth-1, -beta, -a);
+                if score >= beta { return score }
+                if score > score_max {
+                    a = max(a,score);
+                    score_max = score;
                 }
             }
         }
-
-        let mut evl = 0;
-        let corner1: Vec<(i32,i32)> = vec![(0,0),(7,0),(0,7),(7,7)];
-        let corner2: Vec<(i32,i32)> = vec![(1,1),(6,1),(1,6),(6,6)];
-        let corner3: Vec<(i32,i32)> = vec![(0,1),(1,0),(1,7),(0,6),(7,1),(6,0),(6,7),(7,6)];
-        for c in &corner1 {
-            if self.get(c.0,c.1) ==     player {evl += EVAL_CORNER1}
-            if self.get(c.0,c.1) == 3 - player {evl -= EVAL_CORNER1}
-        }
-        for c in &corner2 {
-            if self.get(c.0,c.1) ==     player {evl -= EVAL_CORNER2}
-            if self.get(c.0,c.1) == 3 - player {evl += EVAL_CORNER2}
-        }
-        for c in &corner3 {
-            if self.get(c.0,c.1) ==     player {evl -= EVAL_CORNER3}
-            if self.get(c.0,c.1) == 3 - player {evl += EVAL_CORNER3}
-        }
-        
-        if turn <= 40 {
-            evl += moves.len() as i32 * 10;
-        }
-        else {
-            evl += moves.len() as i32 * max(0,40 - turn + 10) + mystones * min(10,turn - 40) * 2;
-        }
-        return evl
     }
+    return score_max;
 }
 
-fn alphabeta_(board: Board, player: i32, player_now: i32, depth: i32, al: i32, bt: i32) -> i32 {
-    if board.is_end(player) != 0 || depth == 0 {return board.evaluate(player)}
-    let mut alpha = al;
-    let mut beta = bt;
-    if player == player_now {
-        let moves = board.get_all_move(player_now);
-        if moves.len() == 0 {
-            alpha = max(alpha, alphabeta_(board, player, 3-player_now, depth-1, alpha, beta));
-        }
-        else {
-            for m in moves {
-                let mut next = board.clone();
-                next.put(player_now, m.0, m.1);
-                alpha = max(alpha, alphabeta_(next, player, 3-player_now, depth-1, alpha, beta));
-                if alpha >= beta { break }
-            }
-        }
-        return alpha;
-    }
-    else {
-        let moves = board.get_all_move(player_now);
-        if moves.len() == 0 {
-            beta = min(beta, alphabeta_(board, player, 3-player_now, depth-1, alpha, beta));
-        }
-        else {
-            for m in moves {
-                let mut next = board.clone();
-                next.put(player_now, m.0, m.1);
-                beta = min(beta, alphabeta_(next, player, 3-player_now, depth-1, alpha, beta));
-                if alpha >= beta { break }
-            }
-        }
-        return beta;
-    }
-    
-}
-
-pub fn alphabeta(player: i32, board: Board, depth: i32) -> (i32, i32) {
+pub fn alphabeta(player: i32, board: BitBoard, depth: i32) -> (i32, i32) {
     if board.is_end(player) != 0 {return (-1,-1)}
-    let mut alpha = -INF;
-    let moves = board.get_all_move(player);
-    let mut mv = (moves[0].0,moves[0].1);
-    for m in moves {
-        let mut next = board.clone();
-        next.put(player, m.0, m.1);
-        let tmp = alphabeta_(next, player, 3 - player, depth - 1, alpha, INF);
-        if alpha < tmp {
-            alpha = tmp;
-            mv = m;
+    let mut mv = (-1,-1);
+
+    let mut a = -INF;
+    let beta = INF;
+    let mut score;
+    let mut score_max = -INF;
+
+    let legal_board = board.make_legal_board(player);
+    for i in 0..64 {
+        if (legal_board >> i) & 1 != 0 {
+            let mut next = board.clone();
+            next.reverse(player, 1u64 << i);
+            score = -alphabeta_(next, player, 3-player, depth-1, -beta, -a);
+            if score > score_max {
+                a = max(a,score);
+                score_max = score;
+                mv = (i / 8, i % 8);
+            }
         }
     }
+    println!("{}",score_max);
     return mv;
 }
