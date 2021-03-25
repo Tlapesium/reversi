@@ -56,7 +56,7 @@ function draw() {
                 context.closePath();
                 context.fill();
             }
-            if (board_is_valid(player, i, j)) {
+            if (board_is_valid(player, i, j) && document.getElementById('highlight').checked) {
                 context.beginPath();
                 context.fillStyle = "yellow";
                 context.arc(offsetX + j*50 + 25, offsetY + i*50 + 25, 15, 0, Math.PI * 2, true);
